@@ -317,8 +317,7 @@ class IncomeStatement(Statement):
 
     def get_savings_rate(self):
         non_gains_net_income = self.get_non_investment_gains_net_income()
-        non_gains_income = sum([balance.amount for balance in self.balances if balance.account_sub_type != Account.SubType.UNREALIZED_INVESTMENT_GAINS and balance.account_type == Account.Type.INCOME])
-        if non_gains_income == 0:
+        if (non_gains_income := sum([balance.amount for balance in self.balances if balance.account_sub_type != Account.SubType.UNREALIZED_INVESTMENT_GAINS and balance.account_type == Account.Type.INCOME])) == 0:
             return None
         return non_gains_net_income / non_gains_income
 
@@ -359,16 +358,14 @@ class BalanceSheet(Statement):
 
     def get_cash_percent_assets(self):
         cash = sum([summary.value for summary in self.summaries if summary.name == Account.SubType.CASH.label])
-        assets = sum([summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label])
-        if assets == 0:
+        if (assets := sum([summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label])) == 0:
             return None
 
         return cash / assets
 
     def get_debt_to_equity(self):
         liabilities = sum([summary.value for summary in self.summaries if summary.name == Account.Type.LIABILITY.label])
-        equity = sum([summary.value for summary in self.summaries if summary.name == Account.Type.EQUITY.label])
-        if equity == 0:
+        if (equity := sum([summary.value for summary in self.summaries if summary.name == Account.Type.EQUITY.label])) == 0:
             return None
 
         return liabilities / equity
@@ -381,8 +378,7 @@ class BalanceSheet(Statement):
 
     def get_liquid_assets_percent(self):
         liquid_assets = self.get_liquid_assets()
-        assets = sum([summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label])
 
-        if assets == 0:
+        if (assets := sum([summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label])) == 0:
             return None
         return liquid_assets / assets

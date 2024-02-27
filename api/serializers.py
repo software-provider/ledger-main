@@ -132,9 +132,8 @@ class JournalEntryInputSerializer(serializers.ModelSerializer):
         credits = 0
         for journal_entry_item in journal_entry_items:
             amount = journal_entry_item['amount']
-            type = journal_entry_item['type']
 
-            if type == 'debit':
+            if (type := journal_entry_item['type']) == 'debit':
                 debits += amount
             elif type == 'credit':
                 credits += amount
@@ -172,9 +171,8 @@ class JournalEntryInputSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         journal_entry_items_data = validated_data.pop('journal_entry_items')
-        transaction_type = validated_data.pop('transaction_type', None)
 
-        if transaction_type:
+        if transaction_type := validated_data.pop('transaction_type', None):
             instance.transaction.type = transaction_type
             instance.transaction.save()
 

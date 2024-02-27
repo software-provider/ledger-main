@@ -127,8 +127,7 @@ class AccountView(APIView):
     def get(self, request, *args, **kwargs):
         accounts = Account.objects.all().order_by('name')
 
-        csv_only = self.request.query_params.get('csv_only')
-        if csv_only:
+        if csv_only := self.request.query_params.get('csv_only'):
             accounts = accounts.exclude(csv_profile__isnull=bool(csv_only))
 
         account_output_serializer = AccountOutputSerializer(accounts,many=True)
