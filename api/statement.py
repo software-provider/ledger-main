@@ -142,7 +142,7 @@ class Statement:
         return summaries
 
     def get_summary_value(self, search):
-        value = sum([summary.value for summary in self.summaries if summary.name in search])
+        value = sum(summary.value for summary in self.summaries if summary.name in search)
         return value
 
 class CashFlowStatement(Statement):
@@ -180,32 +180,32 @@ class CashFlowStatement(Statement):
 
     @staticmethod
     def get_cash_balance(balance_sheet):
-        cash = sum([summary.value for summary in balance_sheet.summaries if summary.name == 'Cash'])
+        cash = sum(summary.value for summary in balance_sheet.summaries if summary.name == 'Cash')
         return cash
 
     @staticmethod
     def get_cash_flow(balances_list):
-        cash_flow = sum([balance.amount for balance in balances_list])
+        cash_flow = sum(balance.amount for balance in balances_list)
         return cash_flow
 
     def get_balances(self):
         return self.balances
 
     def get_levered_after_tax_cash_flow(self):
-        return self.net_income_less_gains_and_losses + sum([summary.value for summary in self.summaries if summary.name == 'Cash Flow From Financing'])
+        return self.net_income_less_gains_and_losses + sum(summary.value for summary in self.summaries if summary.name == 'Cash Flow From Financing')
 
     def get_levered_after_tax_after_retirement_cash_flow(self):
         levered_after_tax_cash_flow = self.get_levered_after_tax_cash_flow()
         cash_from_investing_balances = self.get_cash_from_investing_balances()
-        retirement_cash_flow = sum([balance.amount for balance in cash_from_investing_balances if balance.account_sub_type == Account.SubType.SECURITIES_RETIREMENT])
+        retirement_cash_flow = sum(balance.amount for balance in cash_from_investing_balances if balance.account_sub_type == Account.SubType.SECURITIES_RETIREMENT)
         return levered_after_tax_cash_flow + retirement_cash_flow
 
     def get_balance_sheet_account_deltas(self):
         accounts = Account.objects.filter(type__in=[Account.Type.ASSET,Account.Type.LIABILITY,Account.Type.EQUITY])
         account_deltas = []
         for account in accounts:
-            starting_balance = sum([balance.amount for balance in self.start_balance_sheet.balances if balance.account == account.name])
-            ending_balance = sum([balance.amount for balance in self.end_balance_sheet.balances if balance.account == account.name])
+            starting_balance = sum(balance.amount for balance in self.start_balance_sheet.balances if balance.account == account.name)
+            ending_balance = sum(balance.amount for balance in self.end_balance_sheet.balances if balance.account == account.name)
             delta = ending_balance - starting_balance
             if account.type == Account.Type.ASSET:
                 delta = delta * -1
@@ -300,24 +300,24 @@ class IncomeStatement(Statement):
         return net_income
 
     def get_taxable_income(self):
-        return sum([balance.amount for balance in self.balances if balance.account_type == Account.Type.INCOME and balance.account_sub_type not in [Account.SubType.UNREALIZED_INVESTMENT_GAINS,Account.SubType.OTHER_INCOME]])
+        return sum(balance.amount for balance in self.balances if balance.account_type == Account.Type.INCOME and balance.account_sub_type not in [Account.SubType.UNREALIZED_INVESTMENT_GAINS,Account.SubType.OTHER_INCOME])
 
     def get_unrealized_gains_and_losses(self):
-        return sum([balance.amount for balance in self.balances if balance.account_sub_type == Account.SubType.UNREALIZED_INVESTMENT_GAINS])
+        return sum(balance.amount for balance in self.balances if balance.account_sub_type == Account.SubType.UNREALIZED_INVESTMENT_GAINS)
 
     def get_non_investment_gains_net_income(self):
         return self.net_income - self.investment_gains
 
     def get_tax_rate(self):
-        taxable_income = sum([balance.amount for balance in self.balances if balance.account_sub_type in [Account.SubType.SALARY, Account.SubType.DIVIDENDS_AND_INTEREST]])
-        taxes = sum([balance.amount for balance in self.balances if balance.account_sub_type == Account.SubType.TAX])
+        taxable_income = sum(balance.amount for balance in self.balances if balance.account_sub_type in [Account.SubType.SALARY, Account.SubType.DIVIDENDS_AND_INTEREST])
+        taxes = sum(balance.amount for balance in self.balances if balance.account_sub_type == Account.SubType.TAX)
         if taxable_income == 0:
             return None
         return taxes / taxable_income
 
     def get_savings_rate(self):
         non_gains_net_income = self.get_non_investment_gains_net_income()
-        non_gains_income = sum([balance.amount for balance in self.balances if balance.account_sub_type != Account.SubType.UNREALIZED_INVESTMENT_GAINS and balance.account_type == Account.Type.INCOME])
+        non_gains_income = sum(balance.amount for balance in self.balances if balance.account_sub_type != Account.SubType.UNREALIZED_INVESTMENT_GAINS and balance.account_type == Account.Type.INCOME)
         if non_gains_income == 0:
             return None
         return non_gains_net_income / non_gains_income
@@ -339,7 +339,7 @@ class BalanceSheet(Statement):
         income_statement = IncomeStatement(end_date=self.end_date,start_date='1970-01-01')
         retained_earnings = income_statement.get_net_income()
 
-        investment_gains_losses = sum([balance.amount for balance in income_statement.balances if balance.account_sub_type == Account.SubType.UNREALIZED_INVESTMENT_GAINS])
+        investment_gains_losses = sum(balance.amount for balance in income_statement.balances if balance.account_sub_type == Account.SubType.UNREALIZED_INVESTMENT_GAINS)
         net_retained_earnings = retained_earnings - investment_gains_losses
 
         return investment_gains_losses, net_retained_earnings
@@ -358,30 +358,30 @@ class BalanceSheet(Statement):
         return metrics
 
     def get_cash_percent_assets(self):
-        cash = sum([summary.value for summary in self.summaries if summary.name == Account.SubType.CASH.label])
-        assets = sum([summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label])
+        cash = sum(summary.value for summary in self.summaries if summary.name == Account.SubType.CASH.label)
+        assets = sum(summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label)
         if assets == 0:
             return None
 
         return cash / assets
 
     def get_debt_to_equity(self):
-        liabilities = sum([summary.value for summary in self.summaries if summary.name == Account.Type.LIABILITY.label])
-        equity = sum([summary.value for summary in self.summaries if summary.name == Account.Type.EQUITY.label])
+        liabilities = sum(summary.value for summary in self.summaries if summary.name == Account.Type.LIABILITY.label)
+        equity = sum(summary.value for summary in self.summaries if summary.name == Account.Type.EQUITY.label)
         if equity == 0:
             return None
 
         return liabilities / equity
 
     def get_liquid_assets(self):
-        cash = sum([summary.value for summary in self.summaries if summary.name == Account.SubType.CASH.label])
-        brokerage = sum([summary.value for summary in self.summaries if summary.name == Account.SubType.SECURITIES_UNRESTRICTED.label])
+        cash = sum(summary.value for summary in self.summaries if summary.name == Account.SubType.CASH.label)
+        brokerage = sum(summary.value for summary in self.summaries if summary.name == Account.SubType.SECURITIES_UNRESTRICTED.label)
 
         return cash + brokerage
 
     def get_liquid_assets_percent(self):
         liquid_assets = self.get_liquid_assets()
-        assets = sum([summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label])
+        assets = sum(summary.value for summary in self.summaries if summary.name == Account.Type.ASSET.label)
 
         if assets == 0:
             return None
